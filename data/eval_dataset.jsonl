@@ -1,0 +1,8 @@
+{"id": "ev-001", "question": "How long does a refund take to show up on my card?", "expected_category": "refunds", "must_contain": ["5-7 business days", "10 business days"]}
+{"id": "ev-002", "question": "My package was supposed to arrive 12 business days ago, what now?", "expected_category": "shipping", "must_contain": ["10 business days", "investigation"]}
+{"id": "ev-003", "question": "I forgot my password, what do I do?", "expected_category": "accounts", "must_contain": ["/reset", "30 minutes"]}
+{"id": "ev-004", "question": "Please delete all my personal data, I'm exercising my GDPR right.", "expected_category": "escalate", "must_contain": []}
+{"id": "ev-005", "question": "I want a refund of $2500 on order ORD-999000.", "expected_category": "escalate", "must_contain": []}
+{"id": "ev-006", "question": "What's the capital of France?", "expected_category": "unknown", "must_contain": []}
+{"id": "ev-007", "question": "Can I change my shipping address after the order has been dispatched?", "expected_category": "shipping", "must_contain": ["carrier", "cannot modify"]}
+{"id": "ev-008", "question": "I downgraded my plan, do I get a refund for this month?", "expected_category": "accounts", "must_contain": ["next billing cycle"]}
