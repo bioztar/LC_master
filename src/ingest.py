@@ -5,10 +5,10 @@ Run: python -m src.ingest
 from pathlib import Path
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import MarkdownHeaderTextSplitter, RecursiveCharacterTextSplitter
-from langchain_openai import OpenAIEmbeddings
 from langchain_chroma import Chroma
 
-from src.config import DOCS_DIR, CHROMA_DIR, OPENAI_EMBED_MODEL, OPENAI_API_KEY
+from src.config import DOCS_DIR, CHROMA_DIR
+from src.llm import get_embeddings
 
 
 def load_and_split() -> list:
@@ -32,7 +32,7 @@ def main() -> None:
     chunks = load_and_split()
     print(f"Loaded {len(chunks)} chunks from {DOCS_DIR}")
 
-    embeddings = OpenAIEmbeddings(model=OPENAI_EMBED_MODEL, api_key=OPENAI_API_KEY)
+    embeddings = get_embeddings()
     Path(CHROMA_DIR).mkdir(parents=True, exist_ok=True)
 
     store = Chroma(

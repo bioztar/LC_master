@@ -15,10 +15,10 @@ import uuid
 from pathlib import Path
 
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_openai import ChatOpenAI
 from langgraph.types import Command
 
-from src.config import OPENAI_API_KEY, OPENAI_MODEL, LANGFUSE_ENABLED
+from src.config import LANGFUSE_ENABLED
+from src.llm import get_chat
 from src.graph import compiled_graph
 from src.tracing import langfuse_callbacks, flush_langfuse
 
@@ -34,8 +34,9 @@ JUDGE_PROMPT = ChatPromptTemplate.from_messages([
 
 
 def _judge(question: str, answer: str, expected: str) -> tuple[float, str]:
-    llm = ChatOpenAI(model=OPENAI_MODEL, api_key=OPENAI_API_KEY, temperature=0.0)
-    chain = JUDGE_PROMPT | llm | (lambda m: json.loads(m.content))
+    from src.nodes import _parse_json
+    llm = get_chat(temperature=0.0, json_mode=True)
+    chain = JUDGE_PROMPT | llm | (lambda m: _parse_json(m.content))
     out = chain.invoke({"q": question, "a": answer, "cat": expected})
     return float(out["score"]), out["reason"]
 

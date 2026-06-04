@@ -1,19 +1,24 @@
 """Graph nodes. Each is a pure-ish function: state in → state delta out."""
 import json
+import re
 from typing import Any
 
 from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_openai import ChatOpenAI
 from langgraph.types import interrupt
 
-from src.config import OPENAI_API_KEY, OPENAI_MODEL
+from src.llm import get_chat
 from src.retriever import get_retriever
 from src.state import TriageState
 
 
-def _llm(temperature: float = 0.0) -> ChatOpenAI:
-    return ChatOpenAI(model=OPENAI_MODEL, api_key=OPENAI_API_KEY, temperature=temperature)
+def _parse_json(content: str) -> dict:
+    """Tolerant JSON parser — strips ```json fences some models add."""
+    s = content.strip()
+    if s.startswith("```"):
+        s = re.sub(r"^```(?:json)?\s*", "", s)
+        s = re.sub(r"\s*```$", "", s)
+    return json.loads(s)
 
 
 # ------------- Classifier (supervisor) -------------
@@ -28,7 +33,7 @@ CLASSIFY_PROMPT = ChatPromptTemplate.from_messages([
 
 
 def classify_node(state: TriageState) -> dict[str, Any]:
-    chain = CLASSIFY_PROMPT | _llm() | (lambda m: json.loads(m.content))
+    chain = CLASSIFY_PROMPT | get_chat(temperature=0.0, json_mode=True) | (lambda m: _parse_json(m.content))
     out = chain.invoke({"question": state["question"]})
     return {
         "category": out["category"],
@@ -55,7 +60,7 @@ def rag_node(state: TriageState) -> dict[str, Any]:
         f"[{d.metadata.get('source','?')} / {d.metadata.get('h2','')}] {d.page_content}"
         for d in docs
     )
-    chain = RAG_PROMPT | _llm(temperature=0.2)
+    chain = RAG_PROMPT | get_chat(temperature=0.2)
     msg = chain.invoke({"context": context, "question": state["question"]})
     return {
         "docs": docs,
@@ -66,7 +71,6 @@ def rag_node(state: TriageState) -> dict[str, Any]:
 
 # ------------- Escalate node with HITL -------------
 def escalate_node(state: TriageState) -> dict[str, Any]:
-    """Pause graph for human approval before drafting escalation reply."""
     payload = {
         "type": "escalation_approval",
         "question": state["question"],
@@ -74,7 +78,7 @@ def escalate_node(state: TriageState) -> dict[str, Any]:
         "reasoning": state.get("reasoning"),
         "user_id": state.get("user_id"),
     }
-    decision = interrupt(payload)  # Pauses here; resumes via Command(resume=...)
+    decision = interrupt(payload)
 
     approved = bool(decision.get("approved")) if isinstance(decision, dict) else bool(decision)
     note = decision.get("note", "") if isinstance(decision, dict) else ""
@@ -87,8 +91,7 @@ def escalate_node(state: TriageState) -> dict[str, Any]:
             "trail": ["escalation rejected by human"],
         }
 
-    # Approved: produce escalation message
-    llm = _llm(temperature=0.3)
+    llm = get_chat(temperature=0.3)
     msg = llm.invoke([
         SystemMessage(content="Draft a brief, empathetic escalation acknowledgment. Mention case will be reviewed by a specialist within 1 business day."),
         HumanMessage(content=f"Customer question: {state['question']}\nHuman note: {note}"),
@@ -112,7 +115,6 @@ def unknown_node(state: TriageState) -> dict[str, Any]:
 # ------------- Router -------------
 def route_after_classify(state: TriageState) -> str:
     cat = state.get("category", "unknown")
-    # Low confidence on a known category → escalate to be safe.
     if cat in ("refunds", "shipping", "accounts") and state.get("confidence", 0.0) < 0.55:
         return "escalate"
     if cat in ("refunds", "shipping", "accounts"):

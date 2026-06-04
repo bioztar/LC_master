@@ -60,11 +60,23 @@ You see the same data three ways:
 ## Setup
 
 ```bash
-python -m venv .venv && source .venv/bin/activate
+python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env  # fill OPENAI_API_KEY (+ optional LANGFUSE_*)
+cp .env.example .env
+# Pick provider — Gemini free tier OR OpenAI:
+#   LLM_PROVIDER=gemini   + GOOGLE_API_KEY=AIza...   (get at https://aistudio.google.com)
+#   LLM_PROVIDER=openai   + OPENAI_API_KEY=sk-...
 python -m src.ingest  # embeds docs/*.md → ./data/chroma
 ```
+
+### Provider switch (zero-code)
+
+| Provider | Env vars | Free-tier model |
+|---|---|---|
+| Gemini (AI Studio) | `LLM_PROVIDER=gemini`, `GOOGLE_API_KEY`, `GEMINI_MODEL=gemini-2.5-flash`, `GEMINI_EMBED_MODEL=models/text-embedding-004` | Yes ✓ |
+| OpenAI | `LLM_PROVIDER=openai`, `OPENAI_API_KEY`, `OPENAI_MODEL=gpt-4o-mini`, `OPENAI_EMBED_MODEL=text-embedding-3-small` | No (paid) |
+
+⚠ Embeddings dim differs across providers — if you switch providers, re-run `python -m src.ingest` to rebuild the Chroma store.
 
 ## Run
 
