@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block body %}
+
+<div class="panel">
+  <h2>Thread <code>{{ thread_id }}</code></h2>
+  <p style="color:var(--mute);">Every checkpoint = one node transition. Oldest first. You can rewind (time-travel) from any past step to fork a new thread.</p>
+</div>
+
+{% set last = history[-1] %}
+{% if last.next %}
+<div class="panel" style="border-color:var(--warn);">
+  <h2 style="color:var(--warn);">⏸ Paused — Human-in-the-loop</h2>
+  {% set itr = last.tasks[0].interrupts[0] if last.tasks and last.tasks[0].interrupts else {} %}
+  <dl class="kv">
+    <dt>Next node</dt><dd>{{ last.next|join(', ') }}</dd>
+    <dt>Reason</dt><dd>{{ itr.get('type', 'unknown') }}</dd>
+    <dt>Question</dt><dd>{{ itr.get('question', '—') }}</dd>
+    <dt>Classifier said</dt><dd>{{ itr.get('category') }} — {{ itr.get('reasoning', '') }}</dd>
+  </dl>
+  <form method="post" action="{{ url_for('resume', thread_id=thread_id) }}" style="margin-top:1rem;">
+    <textarea name="note" placeholder="Note for case file (optional)"></textarea>
+    <p style="margin-top:0.7rem;">
+      <button type="submit" name="approved" value="yes">Approve &amp; escalate</button>
+      <button type="submit" name="approved" value="no" class="secondary">Reject</button>
+    </p>
+  </form>
+</div>
+{% endif %}
+
+<div class="panel">
+  <h2>State Timeline</h2>
+  <div class="timeline">
+    {% for step in history %}
+    <div class="step {% if step.next %}paused{% elif loop.last %}final{% endif %}">
+      <div style="display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
+        <strong>
+          Step {{ loop.index }} ·
+          {% if step.next %}before <code>{{ step.next|join(',') }}</code>
+          {% else %}<span class="badge ok">final</span>{% endif %}
+        </strong>
+        <span style="color:var(--mute); font-size:0.8rem;">checkpoint <code>{{ step.checkpoint_id[:12] }}…</code></span>
+      </div>
+      <dl class="kv" style="margin-top:0.4rem;">
+        {% if step.values.get('category') %}<dt>category</dt><dd><span class="badge accent">{{ step.values.category }}</span> conf {{ '%.2f' % (step.values.confidence or 0) }}</dd>{% endif %}
+        {% if step.values.get('reasoning') %}<dt>reasoning</dt><dd>{{ step.values.reasoning }}</dd>{% endif %}
+        {% if step.values.get('docs') %}<dt>retrieved</dt><dd>{{ step.values.docs|length }} chunks</dd>{% endif %}
+        {% if step.values.get('trail') %}<dt>trail</dt><dd>{{ step.values.trail|join(' → ') }}</dd>{% endif %}
+        {% if step.values.get('human_approved') is not none and step.values.get('human_approved') is defined %}
+          <dt>HITL</dt><dd>{{ 'approved ✓' if step.values.human_approved else 'rejected ✗' }} {% if step.values.get('human_note') %}<em>({{ step.values.human_note }})</em>{% endif %}</dd>
+        {% endif %}
+        {% if step.values.get('answer') %}<dt>answer</dt><dd><pre style="white-space:pre-wrap;">{{ step.values.answer }}</pre></dd>{% endif %}
+      </dl>
+      {% if not loop.last %}
+      <form method="post" action="{{ url_for('rewind', thread_id=thread_id) }}" style="margin-top:0.4rem;">
+        <input type="hidden" name="checkpoint_id" value="{{ step.checkpoint_id }}">
+        <button type="submit" class="secondary" style="font-size:0.78rem; padding:0.3rem 0.7rem;">⏮ Rewind here (fork new thread)</button>
+      </form>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="panel">
+  <h2>Full final state (JSON)</h2>
+  <pre>{{ history[-1].values | tojson(indent=2) }}</pre>
+</div>
+
+{% endblock %}

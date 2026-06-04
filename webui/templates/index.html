@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block body %}
+
+<div class="panel">
+  <h2>Agent Graph (topology)</h2>
+  <p style="color:var(--mute); margin-top:0;">Static shape of nodes &amp; edges. Every run flows through this graph; the dashboard then shows you which path it took.</p>
+  <pre class="mermaid">{{ mermaid }}</pre>
+</div>
+
+<div class="panel">
+  <h2>Observability</h2>
+  {% if langfuse_enabled %}
+    <p>Langfuse wired ✓ — open <a href="{{ langfuse_host }}" target="_blank">{{ langfuse_host }}</a> for per-LLM-call traces, token cost, prompt inspector.</p>
+  {% else %}
+    <p>Langfuse <span class="badge warn">not configured</span> — fill <code>LANGFUSE_PUBLIC_KEY</code> + <code>LANGFUSE_SECRET_KEY</code> in <code>.env</code> to enable trace UI. <a href="{{ url_for('visual_layers') }}">What is Langfuse?</a></p>
+  {% endif %}
+</div>
+
+<div class="panel">
+  <h2>Runs (threads)</h2>
+  <p style="margin-top:0;"><a class="btn" href="{{ url_for('run') }}">+ New Run</a></p>
+  {% if not threads %}
+    <p style="color:var(--mute);">No runs yet. Click <em>New Run</em> above or use the CLI: <code>python -m src.main "where is my refund?"</code></p>
+  {% else %}
+  <table>
+    <thead><tr><th>Thread</th><th>Question</th><th>Category</th><th>Status</th><th>Checkpoints</th></tr></thead>
+    <tbody>
+      {% for t in threads %}
+      <tr>
+        <td><a href="{{ url_for('thread', thread_id=t.thread_id) }}"><code>{{ t.thread_id }}</code></a></td>
+        <td style="max-width:380px;">{{ (t.last_question or '—')[:120] }}</td>
+        <td>{% if t.last_category %}<span class="badge accent">{{ t.last_category }}</span>{% else %}—{% endif %}</td>
+        <td>
+          {% if t.paused %}
+            <span class="badge warn">PAUSED on {{ t.next_nodes|join(',') }}</span>
+          {% else %}
+            <span class="badge ok">complete</span>
+          {% endif %}
+        </td>
+        <td>{{ t.checkpoints }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</div>
+
+{% endblock %}

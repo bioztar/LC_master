@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{% block title %}LC_master Dashboard{% endblock %}</title>
+<style>
+  :root { --bg:#0f1115; --panel:#171a21; --line:#262b36; --fg:#e7eaf0; --mute:#8a93a6; --accent:#7cc4ff; --warn:#ffb84d; --ok:#9bd17b; --err:#ff7a7a; }
+  * { box-sizing: border-box; }
+  body { background:var(--bg); color:var(--fg); font-family:-apple-system,system-ui,sans-serif; margin:0; }
+  header { background:var(--panel); border-bottom:1px solid var(--line); padding:0.9rem 1.5rem; display:flex; gap:1.2rem; align-items:center; }
+  header h1 { margin:0; font-size:1.05rem; letter-spacing:0.02em; }
+  header a { color:var(--accent); text-decoration:none; font-size:0.9rem; }
+  header a:hover { text-decoration:underline; }
+  main { max-width:1200px; margin:1.5rem auto; padding:0 1.5rem; }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:1.2rem; margin-bottom:1.2rem; }
+  .panel h2 { margin-top:0; font-size:1rem; color:var(--mute); text-transform:uppercase; letter-spacing:0.08em; }
+  pre { background:#0a0c10; border:1px solid var(--line); padding:0.8rem; border-radius:6px; overflow-x:auto; font-size:0.85rem; }
+  code { background:#0a0c10; padding:0.1rem 0.35rem; border-radius:4px; font-size:0.85rem; }
+  table { width:100%; border-collapse:collapse; }
+  th, td { text-align:left; padding:0.55rem 0.6rem; border-bottom:1px solid var(--line); font-size:0.9rem; vertical-align:top; }
+  th { color:var(--mute); font-weight:600; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.06em; }
+  .badge { display:inline-block; padding:0.15rem 0.55rem; border-radius:99px; font-size:0.72rem; background:#232a38; color:var(--mute); }
+  .badge.ok { background:#1f3225; color:var(--ok); }
+  .badge.warn { background:#3a2c12; color:var(--warn); }
+  .badge.err { background:#3a1f1f; color:var(--err); }
+  .badge.accent { background:#152639; color:var(--accent); }
+  button, .btn { background:var(--accent); color:#0a0c10; border:0; padding:0.55rem 1rem; border-radius:6px; font-weight:600; cursor:pointer; text-decoration:none; display:inline-block; }
+  button.secondary, .btn.secondary { background:#262b36; color:var(--fg); }
+  input[type=text], textarea { width:100%; padding:0.6rem 0.7rem; background:#0a0c10; border:1px solid var(--line); border-radius:6px; color:var(--fg); font-family:inherit; font-size:0.95rem; }
+  textarea { min-height:80px; }
+  a { color:var(--accent); }
+  .timeline { border-left:2px solid var(--line); padding-left:1.2rem; margin-left:0.4rem; }
+  .step { position:relative; margin-bottom:1.1rem; }
+  .step::before { content:''; position:absolute; left:-1.55rem; top:0.4rem; width:0.7rem; height:0.7rem; border-radius:50%; background:var(--accent); }
+  .step.paused::before { background:var(--warn); }
+  .step.final::before { background:var(--ok); }
+  .kv { display:grid; grid-template-columns:140px 1fr; gap:0.3rem 1rem; font-size:0.88rem; }
+  .kv dt { color:var(--mute); }
+  .kv dd { margin:0; }
+  .mermaid { background:#0a0c10; padding:1rem; border-radius:6px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>LC_master · Triage Agent Dashboard</h1>
+  <a href="{{ url_for('index') }}">Overview</a>
+  <a href="{{ url_for('run') }}">New Run</a>
+  <a href="{{ url_for('visual_layers') }}">Visual Layers Explained</a>
+  <a href="{{ url_for('static', filename='graph.html') }}" target="_blank">Graph (standalone)</a>
+</header>
+<main>{% block body %}{% endblock %}</main>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+</script>
+</body>
+</html>

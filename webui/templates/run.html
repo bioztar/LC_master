@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="panel">
+  <h2>New Run</h2>
+  <p style="color:var(--mute);">Submit a customer question. The graph will classify it, then either RAG-answer, route to HITL escalation, or fall back to unknown.</p>
+  <form method="post">
+    <textarea name="question" placeholder="e.g.  Where is my refund of $25 from 3 days ago?"></textarea>
+    <p style="margin-top:0.8rem;"><button type="submit">Run</button></p>
+  </form>
+  <h3 style="margin-top:1.5rem; font-size:0.9rem; color:var(--mute);">Try these to see different paths:</h3>
+  <ul style="color:var(--mute); font-size:0.9rem;">
+    <li><code>How long does a refund take to show on my card?</code> → RAG path</li>
+    <li><code>Delete all my data under GDPR</code> → HITL escalation pause</li>
+    <li><code>I want a refund of $2500 on order ORD-999000</code> → HITL (over $500)</li>
+    <li><code>What is the capital of France?</code> → unknown fallback</li>
+  </ul>
+</div>
+{% endblock %}

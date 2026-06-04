@@ -37,6 +37,26 @@ Eval: deterministic category-match + must-contain + LLM-as-judge groundedness.
 | Observability | **Langfuse** (OSS, self-hostable) | Framework-agnostic, OTel-native, fits regulated / EU. LangSmith swap is one import change. |
 | Eval | LLM-as-judge + deterministic asserts | Hybrid catches both regressions and hallucinations. |
 
+## 🎯 Visual Dashboard (start here if visual learner)
+
+```bash
+python -m scripts.render_graph    # generates webui/static/graph.{mmd,html,png}
+python -m webui.app                # http://localhost:5000
+```
+
+Pages:
+- **/** — graph diagram + list of all past runs
+- **/run** — submit a new question, watch which path it takes
+- **/thread/<id>** — full state timeline per run, with **rewind/time-travel** button on every checkpoint
+- **/visual_layers** — explainer of *where* each visual lives (this dashboard vs Langfuse vs LangGraph Studio)
+
+You see the same data three ways:
+| Visual | Source |
+|---|---|
+| **Graph shape** | `graph.get_graph().draw_mermaid()` |
+| **Per-run state timeline + rewind** | SqliteSaver `get_state_history()` (built into this dashboard) |
+| **Per-LLM-call trace + cost** | Langfuse cloud (fill `.env` keys → traces auto-appear) |
+
 ## Setup
 
 ```bash
