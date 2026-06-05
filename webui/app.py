@@ -143,4 +143,6 @@ def visual_layers():
 
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5000, debug=True)
+    import os
+    port = int(os.getenv("FLASK_RUN_PORT", "5050"))  # 5050 default (macOS AirPlay grabs 5000)
+    app.run(host="127.0.0.1", port=port, debug=True)

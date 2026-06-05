@@ -1,0 +1,44 @@
+<!doctype html>
+<html><head>
+<meta charset="utf-8">
+<title>Support Triage Agent — Graph</title>
+<style>
+  body { font-family: -apple-system, system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+  h1 { margin-bottom: 0.2rem; }
+  .sub { color: #666; margin-bottom: 2rem; }
+  .mermaid { background: #fafafa; padding: 1rem; border-radius: 8px; }
+</style>
+</head>
+<body>
+<h1>Support Triage Agent — Graph Topology</h1>
+<p class="sub">Static diagram of nodes + edges (no run data). Rendered client-side via Mermaid.</p>
+<pre class="mermaid">
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	classify(classify)
+	rag(rag)
+	escalate(escalate)
+	unknown(unknown)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> classify;
+	escalate --> __end__;
+	rag --> __end__;
+	unknown --> __end__;
+	classify -.-> rag;
+	classify -.-> escalate;
+	classify -.-> unknown;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc
+
+</pre>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, theme: 'default' });
+</script>
+</body></html>
