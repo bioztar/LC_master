@@ -39,7 +39,10 @@ def get_embeddings() -> Embeddings:
         return OpenAIEmbeddings(model=config.OPENAI_EMBED_MODEL, api_key=config.OPENAI_API_KEY)
     if config.LLM_PROVIDER == "gemini":
         from langchain_google_genai import GoogleGenerativeAIEmbeddings
+        model = config.GEMINI_EMBED_MODEL
+        if not model.startswith("models/"):
+            model = f"models/{model}"
         return GoogleGenerativeAIEmbeddings(
-            model=config.GEMINI_EMBED_MODEL, google_api_key=config.GOOGLE_API_KEY,
+            model=model, google_api_key=config.GOOGLE_API_KEY,
         )
     raise RuntimeError(f"Unknown provider: {config.LLM_PROVIDER}")
