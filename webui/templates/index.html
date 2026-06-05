@@ -23,13 +23,16 @@
     <p style="color:var(--mute);">No runs yet. Click <em>New Run</em> above or use the CLI: <code>python -m src.main "where is my refund?"</code></p>
   {% else %}
   <table>
-    <thead><tr><th>Thread</th><th>Question</th><th>Category</th><th>Status</th><th>Checkpoints</th></tr></thead>
+    <thead><tr><th>Thread</th><th>Question</th><th>Category</th><th>Path (nodes fired)</th><th>Status</th><th>Ckpts</th></tr></thead>
     <tbody>
       {% for t in threads %}
       <tr>
         <td><a href="{{ url_for('thread', thread_id=t.thread_id) }}"><code>{{ t.thread_id }}</code></a></td>
-        <td style="max-width:380px;">{{ (t.last_question or '—')[:120] }}</td>
+        <td style="max-width:320px;">{{ (t.last_question or '—')[:100] }}</td>
         <td>{% if t.last_category %}<span class="badge accent">{{ t.last_category }}</span>{% else %}—{% endif %}</td>
+        <td style="font-size:0.8rem; color:var(--mute);">
+          {% for s in t.trail %}<span class="badge" style="margin-right:0.2rem;">{{ s }}</span>{% endfor %}
+        </td>
         <td>
           {% if t.paused %}
             <span class="badge warn">PAUSED on {{ t.next_nodes|join(',') }}</span>

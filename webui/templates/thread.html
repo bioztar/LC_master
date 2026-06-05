@@ -32,13 +32,14 @@
   <div class="timeline">
     {% for step in history %}
     <div class="step {% if step.next %}paused{% elif loop.last %}final{% endif %}">
-      <div style="display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
+      <div style="display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap; align-items:baseline;">
         <strong>
           Step {{ loop.index }} ·
-          {% if step.next %}before <code>{{ step.next|join(',') }}</code>
-          {% else %}<span class="badge ok">final</span>{% endif %}
+          <span class="badge accent" style="font-size:0.85rem;">node: {{ step.node }}</span>
+          {% if step.next %} → next <code>{{ step.next|join(',') }}</code>
+          {% elif loop.last %}<span class="badge ok">final</span>{% endif %}
         </strong>
-        <span style="color:var(--mute); font-size:0.8rem;">checkpoint <code>{{ step.checkpoint_id[:12] }}…</code></span>
+        <span style="color:var(--mute); font-size:0.78rem;">step={{ step.step }} · src={{ step.source }} · ckpt <code>{{ step.checkpoint_id[:10] }}…</code></span>
       </div>
       <dl class="kv" style="margin-top:0.4rem;">
         {% if step.state.get('category') %}<dt>category</dt><dd><span class="badge accent">{{ step.state.category }}</span> conf {{ '%.2f' % (step.state.confidence or 0) }}</dd>{% endif %}

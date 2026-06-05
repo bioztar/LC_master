@@ -30,29 +30,47 @@ app = Flask(__name__, template_folder="templates", static_folder="static")
 
 # ---------- Helpers ----------
 def _list_threads() -> list[dict[str, Any]]:
-    """Return summary of every checkpointed thread."""
-    seen: dict[str, dict[str, Any]] = {}
+    """Return summary of every checkpointed thread (latest snapshot per thread)."""
+    counts: dict[str, int] = {}
     with compiled_graph() as g:
-        for state in g.checkpointer.list(None):
-            tid = state.config["configurable"]["thread_id"]
-            entry = seen.setdefault(tid, {"thread_id": tid, "checkpoints": 0})
-            entry["checkpoints"] += 1
-            entry["last_question"] = state.values.get("question", entry.get("last_question"))
-            entry["last_category"] = state.values.get("category", entry.get("last_category"))
-            entry["last_answer"] = state.values.get("answer", entry.get("last_answer"))
-            entry["paused"] = bool(state.next)
-            entry["next_nodes"] = list(state.next or [])
-    return sorted(seen.values(), key=lambda x: x["thread_id"], reverse=True)
+        # Pass 1: discover thread IDs + count checkpoints (CheckpointTuple has no .values)
+        for ct in g.checkpointer.list(None):
+            tid = ct.config["configurable"]["thread_id"]
+            counts[tid] = counts.get(tid, 0) + 1
+        # Pass 2: fetch latest StateSnapshot per thread for typed access
+        results = []
+        for tid, n in counts.items():
+            snap = g.get_state({"configurable": {"thread_id": tid}})
+            v = snap.values or {}
+            results.append({
+                "thread_id": tid,
+                "checkpoints": n,
+                "last_question": v.get("question"),
+                "last_category": v.get("category"),
+                "last_answer": v.get("answer"),
+                "paused": bool(snap.next),
+                "next_nodes": list(snap.next or []),
+                "trail": v.get("trail", []),
+            })
+    return sorted(results, key=lambda x: x["thread_id"], reverse=True)
 
 
 def _thread_history(thread_id: str) -> list[dict[str, Any]]:
-    """Full ordered checkpoint history for one thread, oldest → newest."""
+    """Full ordered checkpoint history for one thread, oldest → newest.
+
+    Adds `node` (which node wrote this checkpoint) extracted from metadata.writes.
+    """
     cfg = {"configurable": {"thread_id": thread_id}}
     history = []
     with compiled_graph() as g:
         for snap in g.get_state_history(cfg):
+            writes = (snap.metadata or {}).get("writes") or {}
+            node_names = [k for k in writes.keys() if k is not None]
             history.append({
                 "checkpoint_id": snap.config["configurable"]["checkpoint_id"],
+                "node": ", ".join(node_names) if node_names else "(start)",
+                "step": (snap.metadata or {}).get("step", 0),
+                "source": (snap.metadata or {}).get("source", ""),
                 "next": list(snap.next or []),
                 "state": dict(snap.values),
                 "tasks": [
