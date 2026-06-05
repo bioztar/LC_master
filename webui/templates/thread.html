@@ -41,14 +41,14 @@
         <span style="color:var(--mute); font-size:0.8rem;">checkpoint <code>{{ step.checkpoint_id[:12] }}…</code></span>
       </div>
       <dl class="kv" style="margin-top:0.4rem;">
-        {% if step.values.get('category') %}<dt>category</dt><dd><span class="badge accent">{{ step.values.category }}</span> conf {{ '%.2f' % (step.values.confidence or 0) }}</dd>{% endif %}
-        {% if step.values.get('reasoning') %}<dt>reasoning</dt><dd>{{ step.values.reasoning }}</dd>{% endif %}
-        {% if step.values.get('docs') %}<dt>retrieved</dt><dd>{{ step.values.docs|length }} chunks</dd>{% endif %}
-        {% if step.values.get('trail') %}<dt>trail</dt><dd>{{ step.values.trail|join(' → ') }}</dd>{% endif %}
-        {% if step.values.get('human_approved') is not none and step.values.get('human_approved') is defined %}
-          <dt>HITL</dt><dd>{{ 'approved ✓' if step.values.human_approved else 'rejected ✗' }} {% if step.values.get('human_note') %}<em>({{ step.values.human_note }})</em>{% endif %}</dd>
+        {% if step.state.get('category') %}<dt>category</dt><dd><span class="badge accent">{{ step.state.category }}</span> conf {{ '%.2f' % (step.state.confidence or 0) }}</dd>{% endif %}
+        {% if step.state.get('reasoning') %}<dt>reasoning</dt><dd>{{ step.state.reasoning }}</dd>{% endif %}
+        {% if step.state.get('docs') %}<dt>retrieved</dt><dd>{{ step.state.docs|length }} chunks</dd>{% endif %}
+        {% if step.state.get('trail') %}<dt>trail</dt><dd>{{ step.state.trail|join(' → ') }}</dd>{% endif %}
+        {% if step.state.get('human_approved') is not none and step.state.get('human_approved') is defined %}
+          <dt>HITL</dt><dd>{{ 'approved ✓' if step.state.human_approved else 'rejected ✗' }} {% if step.state.get('human_note') %}<em>({{ step.state.human_note }})</em>{% endif %}</dd>
         {% endif %}
-        {% if step.values.get('answer') %}<dt>answer</dt><dd><pre style="white-space:pre-wrap;">{{ step.values.answer }}</pre></dd>{% endif %}
+        {% if step.state.get('answer') %}<dt>answer</dt><dd><pre style="white-space:pre-wrap;">{{ step.state.answer }}</pre></dd>{% endif %}
       </dl>
       {% if not loop.last %}
       <form method="post" action="{{ url_for('rewind', thread_id=thread_id) }}" style="margin-top:0.4rem;">
@@ -63,7 +63,7 @@
 
 <div class="panel">
   <h2>Full final state (JSON)</h2>
-  <pre>{{ history[-1].values | tojson(indent=2) }}</pre>
+  <pre>{{ history[-1].state | tojson(indent=2) }}</pre>
 </div>
 
 {% endblock %}

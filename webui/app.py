@@ -54,7 +54,7 @@ def _thread_history(thread_id: str) -> list[dict[str, Any]]:
             history.append({
                 "checkpoint_id": snap.config["configurable"]["checkpoint_id"],
                 "next": list(snap.next or []),
-                "values": dict(snap.values),
+                "state": dict(snap.values),
                 "tasks": [
                     {
                         "name": t.name,
