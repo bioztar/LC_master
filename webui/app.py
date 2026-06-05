@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Any
 
 from flask import Flask, render_template, request, redirect, url_for, abort
+from langchain_core.documents import Document
 from langgraph.types import Command
 
 from src.graph import compiled_graph
@@ -29,6 +30,20 @@ app = Flask(__name__, template_folder="templates", static_folder="static")
 
 
 # ---------- Helpers ----------
+def _jsonable(obj: Any) -> Any:
+    """Recursively convert LangChain/custom objects to JSON-safe primitives."""
+    if isinstance(obj, Document):
+        return {"page_content": obj.page_content, "metadata": obj.metadata}
+    if isinstance(obj, dict):
+        return {k: _jsonable(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_jsonable(x) for x in obj]
+    if isinstance(obj, (str, int, float, bool)) or obj is None:
+        return obj
+    return str(obj)
+
+
+
 def _list_threads() -> list[dict[str, Any]]:
     """Return summary of every checkpointed thread (latest snapshot per thread)."""
     counts: dict[str, int] = {}
@@ -72,7 +87,7 @@ def _thread_history(thread_id: str) -> list[dict[str, Any]]:
                 "step": (snap.metadata or {}).get("step", 0),
                 "source": (snap.metadata or {}).get("source", ""),
                 "next": list(snap.next or []),
-                "state": dict(snap.values),
+                "state": _jsonable(dict(snap.values)),
                 "tasks": [
                     {
                         "name": t.name,
